@@ -1,0 +1,596 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Linked Paper",
+    "version": "0.0.1",
+    "description": "의미 기반 논문 검색 서비스 Linked Paper의 API 문서입니다.",
+    "contact": {
+      "name": "Jungheon Lee",
+      "email": "cutehammond772@gmail.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "TBD"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Search",
+      "description": "의미(Semantic) 검색 기능을 다룹니다."
+    },
+    {
+      "name": "Paper",
+      "description": "논문의 세부 정보에 대해 다룹니다."
+    },
+    {
+      "name": "Communication",
+      "description": "이 서비스의 사용자와 개발사 간 소통 방식에 대해 다룹니다."
+    }
+  ],
+  "paths": {
+    "/search": {
+      "get": {
+        "tags": ["Search"],
+        "summary": "의미를 기반으로 검색을 수행합니다.",
+        "operationId": "findSearchResult",
+        "parameters": [
+          {
+            "name": "query",
+            "description": "의미 검색 대상을 나타냅니다.",
+            "required": true,
+            "in": "query",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "sorting",
+            "description": "쿼리 결과물의 정렬 방식을 나타냅니다.",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "similarity",
+              "enum": ["similarity", "citiation", "recency"]
+            }
+          },
+          {
+            "name": "size",
+            "description": "쿼리 결과물의 개수를 나타냅니다.",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
+          {
+            "name": "index",
+            "description": "쿼리 결과물의 오프셋을 나타냅니다.",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "similarity_limit",
+            "description": "쿼리 결과에 유사도 제한 적용 여부를 나타냅니다.",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          { "$ref": "#/components/parameters/QueryPaperFilterField" },
+          { "$ref": "#/components/parameters/QueryPaperFilterJournal" },
+          { "$ref": "#/components/parameters/QueryPaperFilterStartDate" },
+          { "$ref": "#/components/parameters/QueryPaperFilterEndDate" }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchPaperResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Default400"
+          },
+          "500": {
+            "$ref": "#/components/responses/Default500"
+          }
+        }
+      }
+    },
+    "/paper/{paperID}": {
+      "get": {
+        "tags": ["Paper"],
+        "summary": "특정 논문의 Metadata를 가져옵니다.",
+        "operationId": "getPaperMetadataById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ParamPaperID"
+          },
+          {
+            "$ref": "#/components/parameters/QueryPaperVersion"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaperMetadata"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PaperVersion"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Default400"
+          },
+          "500": {
+            "$ref": "#/components/responses/Default500"
+          }
+        }
+      }
+    },
+    "/paper/{paperID}/versions": {
+      "get": {
+        "tags": ["Paper"],
+        "summary": "특정 논문의 모든 Version을 가져옵니다.",
+        "operationId": "getPaperVersionsById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ParamPaperID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "$ref": "#/components/schemas/PaperVersion" }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Default400"
+          },
+          "500": {
+            "$ref": "#/components/responses/Default500"
+          }
+        }
+      }
+    },
+    "/paper/{paperID}/references": {
+      "get": {
+        "tags": ["Paper"],
+        "summary": "특정 논문이 인용한 논문을 가져옵니다.",
+        "operationId": "getPaperReferencesById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ParamPaperID"
+          },
+          {
+            "$ref": "#/components/parameters/QueryPaperVersion"
+          },
+          {
+            "$ref": "#/components/parameters/QueryLimitation"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/PaperMetadata"
+                      },
+                      {
+                        "$ref": "#/components/schemas/PaperVersion"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Default400"
+          },
+          "500": {
+            "$ref": "#/components/responses/Default500"
+          }
+        }
+      }
+    },
+    "/paper/{paperID}/citiations": {
+      "get": {
+        "tags": ["Paper"],
+        "summary": "특정 논문을 인용한 논문을 가져옵니다.",
+        "operationId": "getPaperCitiationsById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ParamPaperID"
+          },
+          {
+            "$ref": "#/components/parameters/QueryPaperVersion"
+          },
+          {
+            "$ref": "#/components/parameters/QueryLimitation"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "allOf": [
+                      {
+                        "$ref": "#/components/schemas/PaperMetadata"
+                      },
+                      {
+                        "$ref": "#/components/schemas/PaperVersion"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Default400"
+          },
+          "500": {
+            "$ref": "#/components/responses/Default500"
+          }
+        }
+      }
+    },
+    "/announcement": {
+      "get": {
+        "tags": ["Communication"],
+        "summary": "이 서비스의 최근 공지사항을 가져옵니다.",
+        "operationId": "getAnnoucement",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceAnnouncement"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/Default500"
+          }
+        }
+      }
+    },
+    "/feedback": {
+      "post": {
+        "tags": ["Communication"],
+        "summary": "특정 기능에 대한 피드백을 보냅니다.",
+        "operationId": "sendFeedback",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceFeedback"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "$ref": "#/components/responses/Default400"
+          },
+          "500": {
+            "$ref": "#/components/responses/Default500"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "ParamPaperID": {
+        "name": "paperID",
+        "description": "논문의 고유 ID를 나타냅니다.",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "example": "arXiv:2407.21020" }
+      },
+      "QueryPaperVersion": {
+        "name": "version",
+        "description": "논문의 특정 버전을 나타냅니다. (명시하지 않는 경우 가장 최근의 버전을 가져옵니다.)",
+        "in": "query",
+        "schema": { "type": "string", "example": "v1" }
+      },
+      "QueryLimitation": {
+        "name": "limit",
+        "description": "가져올 데이터의 개수를 나타냅니다.",
+        "in": "query",
+        "schema": {
+          "type": "integer",
+          "format": "int32",
+          "example": 10
+        }
+      },
+      "QueryPaperFilterField": {
+        "name": "filter_field",
+        "description": "특정 분류만 검색되도록 합니다.",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "explode": false
+      },
+      "QueryPaperFilterJournal": {
+        "name": "filter_journal",
+        "description": "특정 저널만 검색되도록 합니다.",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "explode": false
+      },
+      "QueryPaperFilterStartDate": {
+        "name": "filter_start_date",
+        "description": "논문 게시일의 날짜 구간을 설정 시, 시작 구간을 나타냅니다.",
+        "in": "query",
+        "schema": { "type": "string" }
+      },
+      "QueryPaperFilterEndDate": {
+        "name": "filter_end_date",
+        "description": "논문 게시일의 날짜 구간을 설정 시, 끝나는 구간을 나타냅니다.",
+        "in": "query",
+        "schema": { "type": "string" }
+      }
+    },
+    "responses": {
+      "Default200": {
+        "description": "OK"
+      },
+      "Default400": {
+        "description": "잘못된 요청입니다. (Bad Request)"
+      },
+      "Default500": {
+        "description": "내부 서버에서 오류가 발생하였습니다. (Internal Server Error)"
+      }
+    },
+    "schemas": {
+      "ServiceAnnouncement": {
+        "required": ["type", "title", "description"],
+        "type": "object",
+        "description": "이 서비스의 공지사항을 나타냅니다.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "이 공지사항의 타입을 나타냅니다.",
+            "example": "info",
+            "enum": [
+              "info",
+              "tip",
+              "question",
+              "success",
+              "warning",
+              "failure",
+              "bug",
+              "suggestion",
+              "quote"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "이 공지사항의 제목을 나타냅니다.",
+            "example": "Are you new to Linked Paper?"
+          },
+          "description": {
+            "type": "string",
+            "description": "이 공지사항의 설명을 나타냅니다.",
+            "example": "Don't look for specific keywords one by one to find the thesis you want, but if you enter the information you want directly, you will find the thesis that is most similar to the meaning. Type any sentence in the search box below!"
+          }
+        }
+      },
+      "ServiceFeedback": {
+        "type": "object",
+        "description": "특정 기능에 대한 피드백을 나타냅니다.",
+        "required": ["feature", "description"],
+        "properties": {
+          "feature": {
+            "type": "string",
+            "description": "피드백 대상 기능을 나타냅니다.",
+            "example": "searching",
+            "enum": ["searching", "flowers", "trends", "filters", "others"]
+          },
+          "detail": {
+            "type": "string",
+            "description": "해당 기능의 세부 특징을 나타냅니다.",
+            "example": "accuracy for searching for AI-relates"
+          },
+          "description": {
+            "type": "string",
+            "description": "해당 기능에 대한 상세 피드백을 나타냅니다.",
+            "example": "semantic searching is not so accurate for me."
+          }
+        }
+      },
+      "PaperMetadata": {
+        "type": "object",
+        "description": "이 논문의 기본 메타데이터를 나타냅니다.",
+        "required": [
+          "id",
+          "title",
+          "authors",
+          "fields",
+          "journal",
+          "abstraction",
+          "reference_count",
+          "citiation_count"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "이 논문의 고유 ID를 나타냅니다.",
+            "example": "arXiv:2407.21020"
+          },
+          "title": {
+            "type": "string",
+            "description": "이 논문의 제목을 나타냅니다.",
+            "example": "A Multiwavelength Portrait of the 3C 220.3 Lensed System"
+          },
+          "authors": {
+            "type": "array",
+            "description": "이 논문의 저자를 나타냅니다.",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "Soley O. Hyman",
+              "Belinda J. Wilkes",
+              "S.P. Willner",
+              "Joanna Kuraszkiewicz",
+              "Mojegan Azadi",
+              "..."
+            ]
+          },
+          "fields": {
+            "type": "array",
+            "description": "이 논문의 분류를 나타냅니다.",
+            "items": {
+              "type": "string"
+            },
+            "example": ["astro-ph.GA"]
+          },
+          "journal": {
+            "type": "string",
+            "description": "이 논문이 실린 저널을 나타냅니다.",
+            "example": "arXiv"
+          },
+          "abstraction": {
+            "type": "string",
+            "description": "이 논문의 초록을 나타냅니다.",
+            "example": "The 3C 220.3 system is a rare case of a foreground narrow-line radio galaxy (\"galaxy A,\" zA=0.6850) lensing a background submillimeter galaxy (zSMG1=2.221). New spectra from MMT/Binospec confirm that the companion galaxy (\"galaxy B\") is part of the lensing system with zB=0.6835. (...)"
+          },
+          "reference_count": {
+            "type": "integer",
+            "format": "int32",
+            "description": "이 논문이 인용한 논문의 개수를 나타냅니다.",
+            "example": 99
+          },
+          "citiation_count": {
+            "type": "integer",
+            "format": "int32",
+            "description": "이 논문을 인용한 논문의 개수를 나타냅니다.",
+            "example": 1099
+          },
+          "origin_link": {
+            "type": "string",
+            "description": "이 논문의 원문 링크를 나타냅니다.",
+            "example": "https://arxiv.org/abs/2407.21020"
+          },
+          "pdf_link": {
+            "type": "string",
+            "description": "이 논문의 PDF 링크를 나타냅니다.",
+            "example": "https://arxiv.org/pdf/2407.21020"
+          }
+        }
+      },
+      "PaperVersion": {
+        "type": "object",
+        "description": "이 논문의 특정 버전을 나타냅니다.",
+        "required": ["version", "date"],
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "이 논문의 버전을 나타냅니다.",
+            "example": "v1"
+          },
+          "date": {
+            "type": "string",
+            "description": "이 논문의 출판 날짜를 나타냅니다.",
+            "example": "2024-06-30"
+          }
+        }
+      },
+      "PaperSimilarity": {
+        "type": "object",
+        "description": "두 대상 간의 유사도를 나타냅니다.",
+        "required": ["weight"],
+        "properties": {
+          "weight": {
+            "type": "integer",
+            "description": "가중치를 나타냅니다.",
+            "format": "int32"
+          }
+        }
+      },
+      "SearchPaperResult": {
+        "type": "object",
+        "description": "검색 결과를 나타냅니다.",
+        "required": ["count", "status", "data"],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "description": "총 검색 결과의 수를 나타냅니다.",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "description": "검색 결과를 반환한 이후에 특정 상태에 도달하였는지의 여부를 나타냅니다.",
+            "enum": ["OK", "LAST_PAGE"]
+          },
+          "data": {
+            "type": "array",
+            "description": "검색 결과를 나타냅니다.",
+            "items": {
+              "allOf": [
+                { "$ref": "#/components/schemas/PaperMetadata" },
+                { "$ref": "#/components/schemas/PaperVersion" },
+                { "$ref": "#/components/schemas/PaperSimilarity" }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
