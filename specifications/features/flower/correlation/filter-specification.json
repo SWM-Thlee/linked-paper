@@ -1,0 +1,7 @@
+{
+  "category": ["string"],
+  "journal": ["string"],
+  "tag": ["string"],
+  "start_date": "YYYY-MM-DD",
+  "end_date": "YYYY-MM-DD"
+}

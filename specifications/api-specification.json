@@ -1,0 +1,762 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Linked Paper",
+    "version": "0.0.2",
+    "description": "의미 기반 논문 검색 서비스 Linked Paper의 API 문서입니다.",
+    "contact": {
+      "name": "Jungheon Lee",
+      "email": "cutehammond772@gmail.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "TBD"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Search",
+      "description": "의미 기반 유사도 검색"
+    },
+    {
+      "name": "Flower",
+      "description": "특정 논문 중심의 Graph Flow"
+    },
+    {
+      "name": "Paper",
+      "description": "특정 논문의 세부 정보"
+    },
+    {
+      "name": "Communication",
+      "description": "사용자와 개발자 간 소통 방식"
+    }
+  ],
+  "paths": {
+    "/search": {
+      "get": {
+        "tags": ["Search"],
+        "summary": "의미를 기반으로 검색을 수행합니다.",
+        "operationId": "getSearchResult",
+        "parameters": [
+          {
+            "name": "query",
+            "description": "의미 기반 검색어",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "sorting",
+            "description": "쿼리 결과의 정렬 방식",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["similarity", "citiation", "recency"]
+            }
+          },
+          {
+            "name": "size",
+            "description": "쿼리 결과의 개수",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "index",
+            "description": "쿼리 결과의 시작 인덱스",
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "similarity_limit",
+            "description": "쿼리 결과 유사도 제한 적용 여부",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          { "$ref": "#/components/parameters/QUERY_PAPER_FILTER_CATEGORY" },
+          { "$ref": "#/components/parameters/QUERY_PAPER_FILTER_JOURNAL" },
+          { "$ref": "#/components/parameters/QUERY_PAPER_FILTER_START_DATE" },
+          { "$ref": "#/components/parameters/QUERY_PAPER_FILTER_END_DATE" }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResult"
+                },
+                "examples": {
+                  "Default": {
+                    "$ref": "#/components/examples/RES200_getSearchResult"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청입니다. (Bad Request)"
+          },
+          "500": {
+            "description": "내부 서버에서 오류가 발생하였습니다. (Internal Server Error)"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseTemplates": {
+                "application/json": "{\n  \"count\": 1,\n  \"status\": \"OK\",\n  \"data\": [\n    {\n      \"id\": \"arXiv:2407.21020\",\n      \"title\": \"A Multiwavelength Portrait of the 3C 220.3 Lensed System\",\n      \"authors\": [\n        \"Soley O. Hyman\",\n        \"Belinda J. Wilkes\",\n        \"S.P. Willner\",\n        \"Joanna Kuraszkiewicz\",\n        \"Mojegan Azadi\"\n      ],\n      \"categories\": [\"astro-ph.GA\"],\n      \"journal\": \"arXiv\",\n      \"abstraction\": \"The 3C 220.3 system is a rare case of a foreground narrow-line radio galaxy (\\\"galaxy A,\\\" zA=0.6850) lensing a background submillimeter galaxy (zSMG1=2.221). New spectra from MMT/Binospec confirm that the companion galaxy (\\\"galaxy B\\\") is part of the lensing system with zB=0.6835.\",\n      \"reference_count\": 99,\n      \"citiation_count\": 1099,\n      \"origin_link\": \"https://arxiv.org/abs/2407.21020\",\n      \"pdf_link\": \"https://arxiv.org/pdf/2407.21020\",\n      \"version\": \"v1\",\n      \"date\": \"2024-06-30\",\n      \"weight\": 10\n    }\n  ]\n}"
+              }
+            }
+          },
+          "requestTemplates": {
+            "application/json": "{\"statusCode\": 200}"
+          },
+          "passthroughBehavior": "when_no_templates",
+          "type": "mock"
+        }
+      }
+    },
+    "/correlations/{paperID}": {
+      "get": {
+        "tags": ["Flower"],
+        "summary": "특정 논문을 기준으로 연관 논문을 가져옵니다.",
+        "operationId": "getCorrelationsById",
+        "parameters": [
+          { "$ref": "#/components/parameters/PATH_PAPER_ID" },
+          { "$ref": "#/components/parameters/QUERY_LIMITATION" },
+          { "$ref": "#/components/parameters/QUERY_PAPER_FILTER_TAG" },
+          { "$ref": "#/components/parameters/QUERY_PAPER_FILTER_CATEGORY" },
+          { "$ref": "#/components/parameters/QUERY_PAPER_FILTER_JOURNAL" },
+          { "$ref": "#/components/parameters/QUERY_PAPER_FILTER_START_DATE" },
+          { "$ref": "#/components/parameters/QUERY_PAPER_FILTER_END_DATE" }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorrelationResult"
+                },
+                "examples": {
+                  "Default": {
+                    "$ref": "#/components/examples/RES200_getCorrelationsById"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청입니다. (Bad Request)"
+          },
+          "500": {
+            "description": "내부 서버에서 오류가 발생하였습니다. (Internal Server Error)"
+          }
+        }
+      }
+    },
+    "/paper/{paperID}": {
+      "get": {
+        "tags": ["Paper"],
+        "summary": "특정 논문의 Metadata를 가져옵니다.",
+        "operationId": "getPaperMetadataById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PATH_PAPER_ID"
+          },
+          {
+            "$ref": "#/components/parameters/QUERY_PAPER_VERSION"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaperMetadata"
+                },
+                "examples": {
+                  "Default": {
+                    "$ref": "#/components/examples/RES200_getPaperMetadataById"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청입니다. (Bad Request)"
+          },
+          "500": {
+            "description": "내부 서버에서 오류가 발생하였습니다. (Internal Server Error)"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseTemplates": {
+                "application/json": "{\n  \"id\": \"arXiv:2407.21020\",\n  \"title\": \"A Multiwavelength Portrait of the 3C 220.3 Lensed System\",\n  \"authors\": [\n    \"Soley O. Hyman\",\n    \"Belinda J. Wilkes\",\n    \"S.P. Willner\",\n    \"Joanna Kuraszkiewicz\",\n    \"Mojegan Azadi\"\n  ],\n  \"categories\": [\"astro-ph.GA\"],\n  \"journal\": \"arXiv\",\n  \"abstraction\": \"The 3C 220.3 system is a rare case of a foreground narrow-line radio galaxy (\\\"galaxy A,\\\" zA=0.6850) lensing a background submillimeter galaxy (zSMG1=2.221). New spectra from MMT/Binospec confirm that the companion galaxy (\\\"galaxy B\\\") is part of the lensing system with zB=0.6835.\",\n  \"reference_count\": 99,\n  \"citiation_count\": 1099,\n  \"origin_link\": \"https://arxiv.org/abs/2407.21020\",\n  \"pdf_link\": \"https://arxiv.org/pdf/2407.21020\",\n  \"version\": \"v1\",\n  \"date\": \"2024-06-30\",\n  \"weight\": 0\n}"
+              }
+            }
+          },
+          "requestTemplates": {
+            "application/json": "{\"statusCode\": 200}"
+          },
+          "passthroughBehavior": "when_no_templates",
+          "type": "mock"
+        }
+      }
+    },
+    "/paper/{paperID}/versions": {
+      "get": {
+        "tags": ["Paper"],
+        "summary": "특정 논문의 모든 Version을 가져옵니다.",
+        "operationId": "getPaperVersionsById",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PATH_PAPER_ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "$ref": "#/components/schemas/PaperVersion"
+                  }
+                },
+                "examples": {
+                  "Default": {
+                    "$ref": "#/components/examples/RES200_getPaperVersionsById"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청입니다. (Bad Request)"
+          },
+          "500": {
+            "description": "내부 서버에서 오류가 발생하였습니다. (Internal Server Error)"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseTemplates": {
+                "application/json": "[\n  {\n    \"version\": \"v1\",\n    \"date\": \"2022-08-30\"\n  },\n  {\n    \"version\": \"v2\",\n    \"date\": \"2022-09-01\"\n  },\n  {\n    \"version\": \"v3\",\n    \"date\": \"2022-09-02\"\n  }\n]"
+              }
+            }
+          },
+          "requestTemplates": {
+            "application/json": "{\"statusCode\": 200}"
+          },
+          "passthroughBehavior": "when_no_templates",
+          "type": "mock"
+        }
+      }
+    },
+    "/announcements": {
+      "get": {
+        "tags": ["Communication"],
+        "summary": "이 서비스의 최근 공지사항을 가져옵니다.",
+        "operationId": "getAnnouncements",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ServiceAnnouncement"
+                  }
+                },
+                "examples": {
+                  "Default": {
+                    "$ref": "#/components/examples/RES200_getAnnouncements"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "내부 서버에서 오류가 발생하였습니다. (Internal Server Error)"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseTemplates": {
+                "application/json": "[\n  {\n    \"type\": \"info\",\n    \"title\": \"Are you new to Linked Paper?\",\n    \"description\": \"Don't look for specific keywords one by one to find the thesis you want, but if you enter the information you want directly, you will find the thesis that is most similar to the meaning. Type any sentence in the search box below!\"\n  }\n]"
+              }
+            }
+          },
+          "requestTemplates": {
+            "application/json": "{\"statusCode\": 200}"
+          },
+          "passthroughBehavior": "when_no_templates",
+          "type": "mock"
+        }
+      }
+    },
+    "/feedback": {
+      "post": {
+        "tags": ["Communication"],
+        "summary": "특정 기능에 대한 피드백을 보냅니다.",
+        "operationId": "sendFeedback",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceFeedback"
+              },
+              "examples": {
+                "Default": {
+                  "$ref": "#/components/examples/REQ_sendFeedback"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "OK" },
+          "400": {
+            "description": "잘못된 요청입니다. (Bad Request)"
+          },
+          "500": {
+            "description": "내부 서버에서 오류가 발생하였습니다. (Internal Server Error)"
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "responses": {
+            "default": {
+              "statusCode": "200"
+            }
+          },
+          "requestTemplates": {
+            "application/json": "{ \"statusCode\": 200 }"
+          },
+          "passthroughBehavior": "when_no_templates",
+          "type": "mock"
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "PATH_PAPER_ID": {
+        "name": "paperID",
+        "description": "논문의 고유 ID",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" }
+      },
+      "QUERY_PAPER_VERSION": {
+        "name": "version",
+        "description": "논문의 특정 버전 (명시하지 않는 경우 가장 최근의 버전)",
+        "in": "query",
+        "schema": { "type": "string" }
+      },
+      "QUERY_LIMITATION": {
+        "name": "limit",
+        "description": "가져올 데이터 개수",
+        "in": "query",
+        "schema": {
+          "type": "number"
+        }
+      },
+      "QUERY_PAPER_FILTER_TAG": {
+        "name": "filter_tag",
+        "description": "특정 태그만 필터링",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "explode": false
+      },
+      "QUERY_PAPER_FILTER_CATEGORY": {
+        "name": "filter_category",
+        "description": "특정 분류만 필터링",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "explode": false
+      },
+      "QUERY_PAPER_FILTER_JOURNAL": {
+        "name": "filter_journal",
+        "description": "특정 저널만 필터링",
+        "in": "query",
+        "schema": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "explode": false
+      },
+      "QUERY_PAPER_FILTER_START_DATE": {
+        "name": "filter_start_date",
+        "description": "논문 게시 날짜 시작 지점",
+        "in": "query",
+        "schema": { "type": "string" }
+      },
+      "QUERY_PAPER_FILTER_END_DATE": {
+        "name": "filter_end_date",
+        "description": "논문 게시 날짜 끝나는 지점",
+        "in": "query",
+        "schema": { "type": "string" }
+      }
+    },
+    "schemas": {
+      "ServiceAnnouncement": {
+        "required": ["type", "title", "description"],
+        "type": "object",
+        "description": "이 서비스의 공지사항을 나타냅니다.",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "이 공지사항의 타입을 나타냅니다.",
+            "enum": [
+              "info",
+              "tip",
+              "question",
+              "success",
+              "warning",
+              "failure",
+              "bug",
+              "suggestion",
+              "quote"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "이 공지사항의 제목을 나타냅니다."
+          },
+          "description": {
+            "type": "string",
+            "description": "이 공지사항의 설명을 나타냅니다."
+          }
+        }
+      },
+      "ServiceFeedback": {
+        "type": "object",
+        "description": "특정 기능에 대한 피드백을 나타냅니다.",
+        "required": ["feature", "description"],
+        "properties": {
+          "feature": {
+            "type": "string",
+            "description": "피드백 대상 기능을 나타냅니다.",
+            "enum": ["searching", "flowers", "trends", "filters", "others"]
+          },
+          "detail": {
+            "type": "string",
+            "description": "해당 기능의 세부 특징을 나타냅니다."
+          },
+          "description": {
+            "type": "string",
+            "description": "해당 기능에 대한 상세 피드백을 나타냅니다."
+          }
+        }
+      },
+      "PaperMetadata": {
+        "allOf": [
+          {
+            "type": "object",
+            "description": "이 논문의 기본 메타데이터를 나타냅니다.",
+            "required": [
+              "id",
+              "title",
+              "authors",
+              "categories",
+              "journal",
+              "abstraction",
+              "reference_count",
+              "citiation_count"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "이 논문의 고유 ID를 나타냅니다."
+              },
+              "title": {
+                "type": "string",
+                "description": "이 논문의 제목을 나타냅니다."
+              },
+              "authors": {
+                "type": "array",
+                "description": "이 논문의 저자를 나타냅니다.",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "categories": {
+                "type": "array",
+                "description": "이 논문의 분류를 나타냅니다.",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "journal": {
+                "type": "string",
+                "description": "이 논문이 실린 저널을 나타냅니다."
+              },
+              "abstraction": {
+                "type": "string",
+                "description": "이 논문의 초록을 나타냅니다."
+              },
+              "reference_count": {
+                "type": "number",
+                "description": "이 논문이 인용한 논문의 개수를 나타냅니다."
+              },
+              "citiation_count": {
+                "type": "number",
+                "description": "이 논문을 인용한 논문의 개수를 나타냅니다."
+              },
+              "origin_link": {
+                "type": "string",
+                "description": "이 논문의 원문 링크를 나타냅니다."
+              },
+              "pdf_link": {
+                "type": "string",
+                "description": "이 논문의 PDF 링크를 나타냅니다."
+              }
+            }
+          },
+          { "$ref": "#/components/schemas/PaperVersion" }
+        ]
+      },
+      "PaperVersion": {
+        "type": "object",
+        "description": "특정 논문의 버전을 나타냅니다.",
+        "required": ["version", "date"],
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "이 논문의 버전을 나타냅니다."
+          },
+          "date": {
+            "type": "string",
+            "description": "이 논문의 출판 날짜를 나타냅니다."
+          }
+        }
+      },
+      "PaperSimilarity": {
+        "type": "object",
+        "description": "두 대상 간의 유사도를 나타냅니다.",
+        "required": ["weight"],
+        "properties": {
+          "weight": {
+            "type": "number",
+            "description": "가중치를 나타냅니다."
+          }
+        }
+      },
+      "PaperTag": {
+        "type": "object",
+        "description": "이 논문에 해당하는 태그를 나타냅니다.",
+        "required": ["tag"],
+        "properties": {
+          "tag": {
+            "type": "array",
+            "description": "태그 정보를 나타냅니다. (두 개 이상일 수 있습니다.)",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SearchResult": {
+        "type": "object",
+        "description": "검색 결과를 나타냅니다.",
+        "required": ["count", "status", "data"],
+        "properties": {
+          "count": {
+            "type": "number",
+            "description": "총 검색 결과의 수를 나타냅니다."
+          },
+          "status": {
+            "type": "string",
+            "description": "검색 결과를 반환한 이후에 특정 상태에 도달하였는지의 여부를 나타냅니다.",
+            "enum": ["OK", "LAST_PAGE"]
+          },
+          "data": {
+            "type": "array",
+            "description": "검색 결과를 나타냅니다.",
+            "items": {
+              "allOf": [
+                { "$ref": "#/components/schemas/PaperMetadata" },
+                { "$ref": "#/components/schemas/PaperSimilarity" }
+              ]
+            }
+          }
+        }
+      },
+      "CorrelationResult": {
+        "type": "object",
+        "description": "연관 논문을 나타냅니다.",
+        "properties": {
+          "count": {
+            "type": "number",
+            "description": "연관 논문의 총 개수를 나타냅니다."
+          },
+          "data": {
+            "type": "array",
+            "description": "연관 논문의 정보를 나타냅니다.",
+            "items": {
+              "allOf": [
+                { "$ref": "#/components/schemas/PaperMetadata" },
+                { "$ref": "#/components/schemas/PaperTag" },
+                { "$ref": "#/components/schemas/PaperSimilarity" }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "examples": {
+      "RES200_getAnnouncements": {
+        "value": [
+          {
+            "type": "info",
+            "title": "Are you new to Linked Paper?",
+            "description": "Don't look for specific keywords one by one to find the thesis you want, but if you enter the information you want directly, you will find the thesis that is most similar to the meaning. Type any sentence in the search box below!"
+          }
+        ]
+      },
+      "REQ_sendFeedback": {
+        "value": {
+          "feature": "searching",
+          "detail": "accuracy for searching for AI-relates",
+          "description": "semantic searching is not so accurate for me."
+        }
+      },
+      "RES200_getSearchResult": {
+        "value": {
+          "count": 0,
+          "status": "OK",
+          "data": [
+            {
+              "id": "arXiv:2407.21020",
+              "title": "A Multiwavelength Portrait of the 3C 220.3 Lensed System",
+              "authors": [
+                "Soley O. Hyman",
+                "Belinda J. Wilkes",
+                "S.P. Willner",
+                "Joanna Kuraszkiewicz",
+                "Mojegan Azadi",
+                "..."
+              ],
+              "categories": ["astro-ph.GA"],
+              "journal": "arXiv",
+              "abstraction": "The 3C 220.3 system is a rare case of a foreground narrow-line radio galaxy (\"galaxy A,\" zA=0.6850) lensing a background submillimeter galaxy (zSMG1=2.221). New spectra from MMT/Binospec confirm that the companion galaxy (\"galaxy B\") is part of the lensing system with zB=0.6835. (...)",
+              "reference_count": 99,
+              "citiation_count": 1099,
+              "origin_link": "https://arxiv.org/abs/2407.21020",
+              "pdf_link": "https://arxiv.org/pdf/2407.21020",
+              "version": "v1",
+              "date": "2024-06-30",
+              "weight": 0
+            }
+          ]
+        }
+      },
+      "RES200_getCorrelationsById": {
+        "value": {
+          "count": 1,
+          "data": [
+            {
+              "id": "arXiv:2407.21020",
+              "title": "A Multiwavelength Portrait of the 3C 220.3 Lensed System",
+              "authors": [
+                "Soley O. Hyman",
+                "Belinda J. Wilkes",
+                "S.P. Willner",
+                "Joanna Kuraszkiewicz",
+                "Mojegan Azadi",
+                "..."
+              ],
+              "categories": ["astro-ph.GA"],
+              "journal": "arXiv",
+              "abstraction": "The 3C 220.3 system is a rare case of a foreground narrow-line radio galaxy (\"galaxy A,\" zA=0.6850) lensing a background submillimeter galaxy (zSMG1=2.221). New spectra from MMT/Binospec confirm that the companion galaxy (\"galaxy B\") is part of the lensing system with zB=0.6835. (...)",
+              "reference_count": 99,
+              "citiation_count": 1099,
+              "origin_link": "https://arxiv.org/abs/2407.21020",
+              "pdf_link": "https://arxiv.org/pdf/2407.21020",
+              "version": "v1",
+              "date": "2024-06-30",
+              "weight": 0.7,
+              "tag": ["Computer Science"]
+            }
+          ]
+        }
+      },
+      "RES200_getPaperMetadataById": {
+        "value": {
+          "id": "arXiv:2407.21020",
+          "title": "A Multiwavelength Portrait of the 3C 220.3 Lensed System",
+          "authors": [
+            "Soley O. Hyman",
+            "Belinda J. Wilkes",
+            "S.P. Willner",
+            "Joanna Kuraszkiewicz",
+            "Mojegan Azadi",
+            "..."
+          ],
+          "categories": ["astro-ph.GA"],
+          "journal": "arXiv",
+          "abstraction": "The 3C 220.3 system is a rare case of a foreground narrow-line radio galaxy (\"galaxy A,\" zA=0.6850) lensing a background submillimeter galaxy (zSMG1=2.221). New spectra from MMT/Binospec confirm that the companion galaxy (\"galaxy B\") is part of the lensing system with zB=0.6835. (...)",
+          "reference_count": 99,
+          "citiation_count": 1099,
+          "origin_link": "https://arxiv.org/abs/2407.21020",
+          "pdf_link": "https://arxiv.org/pdf/2407.21020",
+          "version": "v1",
+          "date": "2024-06-30",
+          "weight": 0
+        }
+      },
+      "RES200_getPaperVersionsById": {
+        "value": [
+          {
+            "version": "v1",
+            "date": "2022-08-30"
+          },
+          {
+            "version": "v2",
+            "date": "2022-09-01"
+          },
+          {
+            "version": "v3",
+            "date": "2022-09-02"
+          }
+        ]
+      }
+    }
+  }
+}
